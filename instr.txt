@@ -1,0 +1,7 @@
+Trying with MongoDB docker image
+>> docker pull mongodb/mongodb-community-server
+>> docker run --name mongo -d -p 27017:27017 mongodb/mongodb-community-server:latest
+
+Install FastAPI for Python
+>> pip install fastapi
+>> pip install "uvicorn[standard]"
