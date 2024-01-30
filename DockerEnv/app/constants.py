@@ -1,5 +1,4 @@
-MONGODB_URL = "mongodb://localhost:27017/"
+MONGODB_URL = "mongodb://mongo:27017/"
 DataBaseName = "CampusFoodDeliverySystem"
 RestaurantCollectionName = "Restaurants"
 RatingsCollectionName = "Ratings"
-RestaurantMenuCollectionName = "Menu"

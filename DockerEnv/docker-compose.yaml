@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongodb/mongodb-community-server:latest
+    container_name: mongo
+    ports:
+      - '27017:27017'
+    restart: always
+
+  api:
+    build:
+      context: .
+      target: dev-envs
+    container_name: fastapi-application
+    environment:
+      PORT: 8000
+    ports:
+      - '8000:8000'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: "no"
+    depends_on:
+      - mongo

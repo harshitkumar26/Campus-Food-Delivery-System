@@ -1,37 +1,45 @@
 from typing import Optional, List
 from datetime import datetime
 from enum import Enum
-from fastapi import FastAPI, Body, HTTPException, status
-from fastapi.responses import Response
+from fastapi import FastAPI, Body, File, HTTPException, status, UploadFile
+from fastapi.responses import Response, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import ConfigDict, BaseModel, Field
 from pydantic.functional_validators import BeforeValidator
+from bson import Binary
 
 from typing_extensions import Annotated
 
-from bson import ObjectId
 import motor.motor_asyncio
-from pymongo import ReturnDocument
-import Database.utilityFunctions as utilityFunctions
-import Database.constants as constants
+import constants as constants
 
 client = motor.motor_asyncio.AsyncIOMotorClient(constants.MONGODB_URL)
 db = client[constants.DataBaseName]
 PyObjectId = Annotated[str, BeforeValidator(str)]
 
-app = FastAPI()
+app = FastAPI(title="Restaurant API",
+    summary="FastAPI Application to add a ReST API to a MongoDB collection for restaurants.",)
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 class RestaurantTypeEnum(str, Enum):
     VEG = "Veg"
     NON_VEG = "Non-Veg"
     BOTH = "Both"
 
+class ImageModel(BaseModel):
+    file_name: str
+    content_type: str
+    image_data: bytes
+
 class RestaurantModel(BaseModel):
     name: str
     phone_number: str
-    restaurant_type: str = Field(..., description="Veg, Non-Veg, or Both")
+    restaurant_type: RestaurantTypeEnum
     opening_time: str = Field(..., description="Save Opening Time")
     closing_time: str = Field(..., description="Save Closing Time")
-    rating: Optional[float] = Field(..., ge=0, le=5, description="Rating should be between 0 and 5")
+    rating: Optional[float] = Field(default=0.0, ge=0, le=5, description="Rating should be between 0 and 5")
+    image: Optional[ImageModel]
     model_config = ConfigDict(
         populate_by_name=True,
         arbitrary_types_allowed=True
@@ -42,7 +50,7 @@ class RestaurantListing(BaseModel):
 
 @app.get("/")
 def read_root():
-    return {"Hello": "World"}
+    return RedirectResponse("/docs")
 
 @app.post("/restaurants/",
           response_description="Add new restaurant",
@@ -50,8 +58,15 @@ def read_root():
           status_code=status.HTTP_201_CREATED,
           response_model_by_alias=False
 )
-async def addRestaurant(restaurant: RestaurantModel = Body(...)):
+async def addRestaurant(restaurant: RestaurantModel = Body(...), image: UploadFile = File(None)):
     restaurantCollection = db[constants.RestaurantCollectionName]
+    if image:
+        content = await image.read()
+        restaurant.image = ImageModel(
+            file_name=image.filename,
+            content_type=image.content_type,
+            image_data=content,
+        )
     restaurant.opening_time = datetime.strptime(restaurant.opening_time, '%I:%M %p')
     restaurant.closing_time = datetime.strptime(restaurant.closing_time, '%I:%M %p')
     newRestaurant = await restaurantCollection.insert_one(restaurant.model_dump(by_alias=True, exclude=["id"]))
@@ -68,7 +83,7 @@ async def addRestaurant(restaurant: RestaurantModel = Body(...)):
 )
 async def listRestaurants():
     restaurantCollection = db[constants.RestaurantCollectionName]
-    restaurantListings = await restaurantCollection.find().to_list(1000)
+    restaurantListings = await restaurantCollection.find().to_list(None)
     for restaurant in restaurantListings:
         restaurant['opening_time'] = restaurant['opening_time'].strftime('%I:%M %p')
         restaurant['closing_time'] = restaurant['closing_time'].strftime('%I:%M %p')
@@ -88,4 +103,15 @@ async def searchRestaurantByName(name: str):
         restaurant['closing_time'] = restaurant['closing_time'].strftime('%I:%M %p')
         return restaurant
     
+    raise HTTPException(status_code=404, detail=f"Restaurant {name} not found")
+
+@app.delete(
+    "/restaurants/{name}",
+    response_description="Delete restaurant by name"
+)
+async def deleteRestaurant(name):
+    restaurantCollection = db[constants.RestaurantCollectionName]
+    deleteRes = await restaurantCollection.delete_one({"name":name})
+    if deleteRes.deleted_count == 1:
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
     raise HTTPException(status_code=404, detail=f"Restaurant {name} not found")
