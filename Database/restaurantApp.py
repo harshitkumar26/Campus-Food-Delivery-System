@@ -1,7 +1,7 @@
 from typing import Optional, List
 from datetime import datetime
 from enum import Enum
-from fastapi import FastAPI, Body, Form, HTTPException, status, UploadFile, File
+from fastapi import FastAPI, Body, Form, HTTPException, status, UploadFile, File, Query
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import Response, RedirectResponse
 from pydantic import ConfigDict, BaseModel, Field
@@ -117,6 +117,29 @@ async def searchRestaurantByName(name: str):
         return restaurant
     
     raise HTTPException(status_code=404, detail=f"Restaurant {name} not found")
+
+@app.get(
+    "/restaurants/search/",
+    response_description="Search restaurants by name",
+    response_model=RestaurantListing,
+    response_model_by_alias=False,
+)
+async def searchRestaurantByQuery(query: str = Query(..., description="Search query")):
+    restaurantCollection = db[constants.RestaurantCollectionName]
+    
+    # Perform case-insensitive search using regular expression
+    search_pattern = {"name": {"$regex": query, "$options": "i"}}
+    matching_restaurants = await restaurantCollection.find(search_pattern).to_list(None)
+
+    if not matching_restaurants:
+        raise HTTPException(status_code=404, detail=f"No restaurants found matching the query: {query}")
+    
+    # Convert opening_time and closing_time to string format
+    for restaurant in matching_restaurants:
+        restaurant['opening_time'] = restaurant['opening_time'].strftime('%I:%M %p')
+        restaurant['closing_time'] = restaurant['closing_time'].strftime('%I:%M %p')
+
+    return RestaurantListing(restaurants=matching_restaurants)
 
 @app.delete(
     "/restaurants/{name}",

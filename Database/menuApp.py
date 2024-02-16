@@ -96,27 +96,13 @@ async def listRestaurantItems(name: str):
     
     raise HTTPException(status_code=404, detail=f"Restaurant {name} not found")
 
-# @app.get(
-#     "/menu/{name}",
-#     response_description="Find menu of restaurant by name",
-#     response_model=MenuResponseModel,
-#     response_model_by_alias=False,
-# )
-# async def searchRestaurantByName(name: str):
-#     menuCollection = db[constants.RestaurantMenuCollectionName]
-
-#     if (menu := await menuCollection.find_many({"restaurantName": name})) is not None:
-#         return menu
-    
-#     raise HTTPException(status_code=404, detail=f"Restaurant {name} not found")
-
-# @app.delete(
-#     "/restaurants/{name}",
-#     response_description="Delete restaurant by name"
-# )
-# async def deleteRestaurant(name):
-#     menuCollection = db[constants.RestaurantMenuCollectionName]
-#     deleteRes = await menuCollection.delete_one({"name":name})
-#     if deleteRes.deleted_count == 1:
-#         return Response(status_code=status.HTTP_204_NO_CONTENT)
-#     raise HTTPException(status_code=404, detail=f"Restaurant {name} not found")
+@app.delete("/menu/{restaurant_name}/{menu_name}",
+            response_description="Delete a menu item from a restaurant by name",
+            status_code=status.HTTP_204_NO_CONTENT
+            )
+async def delete_menu_item_from_restaurant_by_name(restaurant_name: str, menu_name: str):
+    menuCollection = db[constants.RestaurantMenuCollectionName]
+    delete_result = await menuCollection.delete_one({"name": menu_name, "restaurantName": restaurant_name})
+    if delete_result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Menu item not found")
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
