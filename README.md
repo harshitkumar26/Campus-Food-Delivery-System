@@ -41,3 +41,5 @@ The Admin Panel will include the following:
 | Harshit Kumar    | Backend, Database, Frontend    | Customer Android Application, Customer Android Backend, FireBase Authentication |
 | Tanmoy Bhowmick | Frontend, Testing    | Restaurant and Admin Website Design and Development, Manual API Integration Testing |
 | Manish Rai       | Frontend, Testing, Database    | Restaurant and Admin Website Design and Development, FireBase Authentication, Integration Testing |
+
+### For more details, please refer the [Project Report](https://github.com/MoyankGiri/Campus-Food-Delivery-System/blob/main/CampusFoodDeliverySystem.pdf)
