@@ -38,7 +38,7 @@ The Admin Panel will include the following:
 | Contributor      | Domains     | Tasks                                                                                     |
 |------------------|-------------|-------------------------------------------------------------------------------------------|
 | Moyank Giri      | Backend, Database, Testing     | API Development, MongoDB Database Management, Containerization, EC2 Deployment, API Testing |
-| Harshit Kumar    | Backend, Database, Frontend    | Customer Android Application, Customer Android Backend, FireBase Authentication |
+| Harshit Kumar    | Backend, Database, Frontend    | API Development,Customer Android Application, Customer Android Backend, FireBase Authentication |
 | Tanmoy Bhowmick | Frontend, Testing    | Restaurant and Admin Website Design and Development, Manual API Integration Testing |
 | Manish Rai       | Frontend, Testing, Database    | Restaurant and Admin Website Design and Development, FireBase Authentication, Integration Testing |
 
